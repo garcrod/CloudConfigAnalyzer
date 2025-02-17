@@ -33,7 +33,8 @@ async def upload_file(file: UploadFile = File(...)):
         issues_dict = [{"severity": issue.severity, 
                         "category": issue.category,
                         "resource": issue.resource,
-                        "message": issue.message} for issue in issues]
+                        "message": issue.message,
+                        "recommendation": issue.recommendation} for issue in issues]
         print("\nJSON Output:")
         severity_order = {"HIGH": 1, "MEDIUM": 2, "LOW": 3}
         issues_dict.sort(key=lambda x: severity_order.get(x["severity"], 4))

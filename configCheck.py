@@ -9,6 +9,7 @@ class SecurityIssue:
     message: str
     resource: str
     category: str
+    recommendation: str
 
 class CloudSecurityScanner:
     def __init__(self, json_content: str):
@@ -62,7 +63,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="MFA is not enabled for IAM user",
                     resource=f"User {user.get('UserName', 'unknown')}",
-                    category="Authentication"
+                    category="Authentication",
+                    recommendation="Please enable MFA for the IAM user"
                 ))
 
     def _check_aws_encryption(self):
@@ -74,7 +76,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="S3 bucket is not encrypted",
                     resource=f"Bucket {bucket.get('Name', 'unknown')}",
-                    category="Encryption"
+                    category="Encryption",
+                    recommendation="Please enable encryption for the S3 bucket"
                 ))
 
     def _check_aws_containers(self):
@@ -86,7 +89,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Container is running with privileged mode enabled",
                     resource=f"Container {container.get('name', 'unknown')}",
-                    category="Privilege"
+                    category="Privilege",
+                    recommendation="Please disable privileged mode for the container"
                 ))
             
             # Check for root user
@@ -95,7 +99,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Container is running as root user",
                     resource=f"Container {container.get('name', 'unknown')}",
-                    category="Privilege"
+                    category="Privilege",
+                    recommendation="Please run the container as a non-root user"
                 ))
 
     def _check_aws_ports(self):
@@ -110,14 +115,17 @@ class CloudSecurityScanner:
                     if port in sensitive_ports:
                         severity = "HIGH"
                         message = f"Sensible port {port} is open"
+                        recocomendation = "Please restrict access to the port"
                     else:
                         severity = "LOW"
                         message = f"Port {port} is open"
+                        recocomendation = "Please restrict access to the port if not needed"
                     self.issues.append(SecurityIssue(
                         severity=severity,
                         message=message,
                         resource=f"Security Group {sg.get('GroupName', 'unknown')}",
-                        category="Network"
+                        category="Network",
+                        recommendation=recocomendation
                     ))
 
     def _check_aws_secrets(self):
@@ -127,7 +135,8 @@ class CloudSecurityScanner:
                 severity="HIGH", 
                 message="Password found in configuration",
                 resource="AWS Configuration",
-                category="Secrets"
+                category="Secrets",
+                recommendation="Please remove the exposed password from the configuration"
             ))
     
     def _check_aws_openstorage(self):
@@ -142,7 +151,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="S3 bucket has public access enabled",
                     resource=f"Bucket {bucket.get('Name', 'unknown')}",
-                    category="Access Control"
+                    category="Access Control",
+                    recommendation="Please restrict public access to the S3 bucket"
                 ))
 
     def _check_gcp_mfa(self):
@@ -153,7 +163,8 @@ class CloudSecurityScanner:
                 severity="HIGH",
                 message="MFA is not enabled for the Knative service",
                 resource="GCP Knative Service",
-                category="Authentication"
+                category="Authentication",
+                recommendation="Please enable MFA for the Knative service"
             ))
 
         # Check MFA for IAM users
@@ -164,7 +175,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="MFA is not enabled for IAM user",
                     resource=f"IAM User {user.get('name', 'unknown')}",
-                    category="Authentication"
+                    category="Authentication",
+                    recommendation="Please enable MFA for the IAM user"
                 ))
 
         # Check MFA for other services (e.g., Cloud Functions)
@@ -175,7 +187,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="MFA is not enabled for Cloud Function",
                     resource=f"Cloud Function {function.get('name', 'unknown')}",
-                    category="Authentication"
+                    category="Authentication",
+                    recommendation="Please enable MFA for the Cloud Function"
                 ))
 
     def _check_gcp_encryption(self):
@@ -190,7 +203,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Container image encryption not enabled",
                     resource=f"Container {container.get('name', 'unknown')}",
-                    category="Encryption"
+                    category="Encryption",
+                    recommendation="Please enable encryption for the container image"
                 ))
         
         # Check volume encryption
@@ -201,7 +215,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Volume encryption not enabled",
                     resource=f"Volume {volume.get('name', 'unknown')}",
-                    category="Encryption"
+                    category="Encryption",
+                    recommendation="Please enable encryption for the volume"
                 ))
 
     def _check_gcp_containers(self):
@@ -214,7 +229,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Container is running as root user",
                     resource=f"Container {container.get('name', 'unknown')}",
-                    category="Privilege"
+                    category="Privilege",
+                    recommendation="Please run the container as a non-root user"
                 ))
 
             # Check for latest tag
@@ -223,7 +239,8 @@ class CloudSecurityScanner:
                     severity="MEDIUM",
                     message="Container using 'latest' tag",
                     resource=f"Container {container.get('name', 'unknown')}",
-                    category="Version Control"
+                    category="Version Control",
+                    recommendation="Please use a specific version tag"
                 ))
 
     def _check_gcp_secrets(self):
@@ -239,7 +256,8 @@ class CloudSecurityScanner:
                                 severity="HIGH",
                                 message=f"Potential secret found in environment variable: {env.get('name')}",
                                 resource=f"Container {container.get('name', 'unknown')}",
-                                category="Secrets"
+                                category="Secrets",
+                                recommendation="Please remove the secret from the environment variable"
                             ))
                     
                     # Check mounted secrets
@@ -250,7 +268,8 @@ class CloudSecurityScanner:
                                 severity="MEDIUM",
                                 message=f"Secret volume mounted: {mount.get('name')}",
                                 resource=f"Container {container.get('name', 'unknown')}",
-                                category="Secrets"
+                                category="Secrets",
+                                recommendation="Please ensure the secret volume is secure"
                             ))         
 
     def _check_gcp_openstorage(self):
@@ -263,7 +282,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="GCP storage volume has write access enabled",
                     resource=f"Volume {volume.get('name', 'unknown')}",
-                    category="Storage"
+                    category="Storage",
+                    recommendation="Please restrict write access to the volume"
                 ))
             
             # Check for public bucket access
@@ -272,7 +292,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="GCS bucket has public access enabled", 
                     resource=f"Volume {volume.get('name', 'unknown')}",
-                    category="Access Control"
+                    category="Access Control",
+                    recommendation="Please restrict public access to the bucket"
                 ))
             
             # Check for sensitive data in temporary storage
@@ -281,7 +302,8 @@ class CloudSecurityScanner:
                     severity="MEDIUM",
                     message="Using emptyDir volume which is temporary and less secure",
                     resource=f"Volume {volume.get('name', 'unknown')}",
-                    category="Storage"
+                    category="Storage",
+                    recommendation="Please use a more secure storage option"
                 ))
 
     def _check_gcp_ports(self):
@@ -297,14 +319,17 @@ class CloudSecurityScanner:
                     if port_number in sensitive_ports:
                         severity = "HIGH"
                         message = f"Sensible port {port_number} is open"
+                        recommendation = "Please restrict access to the port"
                     else:
                         severity = "LOW"
                         message = f"Port {port_number} is open"
+                        recommendation = "Please restrict access to the port if not needed"
                     self.issues.append(SecurityIssue(
                         severity=severity,
                         message=f"Container exposing port {port_number}",
                         resource=f"Container {container.get('name', 'unknown')}",
-                        category="Network"
+                        category="Network",
+                        recommendation=recommendation
                     ))
 
     def _check_azure_mfa(self, resource):
@@ -313,7 +338,8 @@ class CloudSecurityScanner:
                 severity="HIGH",
                 message="MFA is not enabled",
                 resource=f"Azure {resource['type']} - {resource['name']}",
-                category="Authentication"
+                category="Authentication",
+                recommendation="Please enable MFA for the resource"
             ))
 
     def _check_azure_encryption(self, resource):
@@ -322,7 +348,8 @@ class CloudSecurityScanner:
                 severity="HIGH",
                 message="Resource is not encrypted",
                 resource=f"Azure {resource['type']} - {resource['name']}",
-                category="Encryption"
+                category="Encryption",
+                recommendation="Please enable encryption for the resource"
             ))
 
     def _check_azure_containers(self, resource):
@@ -334,7 +361,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Container running in privileged mode",
                     resource=f"Azure {resource['type']} - {resource['name']}",
-                    category="Privilege"
+                    category="Privilege",
+                    recommendation="Please disable privileged mode for the container"
                 ))
             
             # Check for root user
@@ -343,7 +371,8 @@ class CloudSecurityScanner:
                     severity="HIGH", 
                     message="Container running as root user",
                     resource=f"Azure {resource['type']} - {resource['name']}",
-                    category="Privilege"
+                    category="Privilege",
+                    recommendation="Please run the container as a non-root user"
                 ))
 
     def _check_azure_ports(self, resource):
@@ -353,14 +382,17 @@ class CloudSecurityScanner:
             if port in sensitive_ports:
                 severity = "HIGH"
                 message = f"Sensible port {port} is open"
+                recommendation = "Please restrict access to the port"
             else:
                 severity = "LOW"
                 message = f"Port {port} is open"
+                recommendation = "Please restrict access to the port if not needed"
             self.issues.append(SecurityIssue(
                 severity=severity,
                 message=message,
                 resource=f"Azure {resource['type']} - {resource['name']}",
-                category="Network"
+                category="Network",
+                recommendation=recommendation
             ))
 
     def _check_azure_secrets(self, resource):
@@ -369,7 +401,8 @@ class CloudSecurityScanner:
                 severity="HIGH",
                 message="Password exposed in configuration",
                 resource=f"Azure {resource['type']} - {resource['name']}",
-                category="Secrets"
+                category="Secrets",
+                recommendation="Please remove the exposed password from the configuration"
             ))
 
     def _check_azure_openstorage(self, resource):
@@ -380,7 +413,8 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Storage account allows public blob access",
                     resource=f"Azure {resource['type']} - {resource['name']}",
-                    category="Access Control"
+                    category="Access Control",
+                    recommendation="Please restrict public access to the storage account"
                 ))
             
             if resource.get('properties', {}).get('allowSharedKeyAccess', False):
@@ -388,7 +422,8 @@ class CloudSecurityScanner:
                     severity="MEDIUM",
                     message="Storage account allows shared key access",
                     resource=f"Azure {resource['type']} - {resource['name']}",
-                    category="Access Control"
+                    category="Access Control",
+                    recommendation="Please restrict shared key access to the storage account"
                 ))
             
             # Check network access rules
@@ -397,8 +432,9 @@ class CloudSecurityScanner:
                     severity="HIGH",
                     message="Storage account network rules allow access by default",
                     resource=f"Azure {resource['type']} - {resource['name']}",
-                    category="Network"
-                ))
+                    category="Network",
+                    recommendation="Please restrict network access to the storage account"
+                    ))
 
     def scan(self):
         # Detect config type and run appropriate checks
