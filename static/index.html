@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Config Analyzer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .high .card-body { color: #8B0000; } /* Dark Red */
+        .medium .card-body { color: #B8860B; } /* Dark Yellow */
+        .low .card-body { color: #4682B4; } /* Dark Blue */
+        .container {
+            margin-top: 50px;
+        }
+        .btn-primary {
+            background-color: #162447;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1f4068;
+        }
+        .card {
+            background-color: #162447;
+            border: none;
+        }
+        .card-body {
+            color: #e0e0e0;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Cloud Config Analyzer</h1>
+        <form id="uploadForm" class="text-center">
+            <div class="form-group">
+                <input type="file" id="fileInput" accept="application/json" class="form-control-file">
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        <div id="results" class="mt-4"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#uploadForm').on('submit', function(event) {
+                event.preventDefault();
+                var fileInput = $('#fileInput')[0];
+                if (fileInput.files.length === 0) {
+                    alert('Please select a file.');
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                $.ajax({
+                    url: './upload',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        $('#results').empty();
+                        $('#results').append('<p><h2>Your cloud configuration file has been analyzed.</h2></p>');
+                        $('#results').append('<p><h2>Here you can find the security issues detected:</h2></p>');
+                        if (response.results) {
+                            var results = JSON.parse(response.results);
+                            results.forEach(function(issue) {
+                                var severityClass = issue.severity.toLowerCase();
+                                var resultHtml = `<div class="card mb-3 ${severityClass}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${issue.severity} - ${issue.category}</h5>
+                                        <p class="card-text">${issue.resource}</p>
+                                        <p class="card-text">${issue.message}</p>
+                                    </div>
+                                </div>`;
+                                $('#results').append(resultHtml);
+                            });
+                        } else {
+                            $('#results').text('No security issues detected');
+                        }
+                    },
+                    error: function() {
+                        $('#results').text('Error uploading file.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
