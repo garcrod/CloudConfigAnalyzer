@@ -26,6 +26,7 @@ To run the tool locally, use the following command:
 ```bash
 python3 main.py
 ```
+And browse to http://localhost:8000
 
 ### Deploy to GCP
 
