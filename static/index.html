@@ -56,6 +56,12 @@
                     return;
                 }
 
+                var file = fileInput.files[0];
+                if (file.type !== 'application/json') {
+                    alert('Please select a valid JSON file.');
+                    return;
+                }
+
                 var formData = new FormData();
                 formData.append('file', fileInput.files[0]);
 
